@@ -1,0 +1,298 @@
+
+<div class="container  shadow-sm shadow-lg ">
+  <form #form="ngForm"  >
+    <div class="d-flex align-items-center">
+     
+
+<input
+[(ngModel)]="searchText"
+name="queryString"
+type="text"
+class="form-control me-2"
+placeholder="Search"
+aria-label="Search"
+(input)="onchange()"
+/>
+
+<button type="button" class="btn bgMain txtMain btn-info shadow"  (click)="searchEmployees($event)">
+<i class="fas fa-search"></i>
+</button>
+
+    </div>
+  </form>
+  <div class="loader-overlay" *ngIf="loading">
+    <div class="loader"></div>
+  </div>
+
+  <div *ngIf="!loading">
+ 
+  </div>
+  
+
+  <div class="d-flex justify-content-between bg-light py-3 flex-wrap">
+    <h1 class="p-4 flex-grow-1">Manage Employees</h1>
+    <div class="p-4">
+      <button class="btn btn-success m-2 shadow" (click)="showADDForm()"><i class="fas fa-plus-circle"></i> Add</button>
+      <button class="btn btn-danger m-2 shadow" (click)="showRemoveForm(0)"><i class="fas fa-minus-circle"></i> Delete</button>
+    </div>
+  </div>
+  <div class="table-responsive shadow-sm">
+    <table class="table table-hover">
+      <thead>
+          <tr>
+            
+              <th scope="col"><input type="checkbox" [(ngModel)]="selectAll" (change)="toggleAll($event)"></th>
+              <th scope="col">#</th>
+              <th scope="col" (click)="sortByName()">Name  
+                <i *ngIf="!isNameAscending" [style.color]="nameSortColor" class="fa-solid fa-sort-up sorted"></i>
+                <i *ngIf="isNameAscending" [style.color]="nameSortColor" class="fa-solid fa-sort-down sorted"></i>
+              </th>
+                <th scope="col">Address</th>
+              <th scope="col" (click)="sortByEmail()">Email     
+                <i *ngIf="!isEmailAscending" [style.color]="emailSortColor" class="fa-solid fa-sort-up sorted"></i>
+                <i *ngIf="isEmailAscending" [style.color]="emailSortColor" class="fa-solid fa-sort-down sorted"></i>
+              </th>
+              
+
+              <th scope="col">Phone</th>
+              <th scope="col">Actions</th>
+          </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let emp of employees | paginate: { itemsPerPage: pageSize, currentPage: p }; let i=index; ">
+              <td><input type="checkbox"  [checked]="isChecked(emp)"  (change)="onCheckboxChange(emp.id, $event)"></td>
+              <td>{{ calculateIndex(i) }}</td>
+              <td>{{emp.name}}</td>
+              <td>{{emp.address}}</td>
+              <td>{{emp.email}}</td>
+              <td>{{emp.phone}}</td>
+              
+              <td>   <div
+                class="d-flex flex-column flex-sm-row gap-2 justify-content-center"
+              >
+                <button class="btn btn-warning bgMain txtMain shadow" (click)="showUpdateForm(emp)" >
+                  <i class="fas fa-pencil-alt"></i>
+                </button>
+                <button
+                  class="btn btn-danger shadow "
+                  (click)="showRemoveForm(emp.id)"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div> </td>
+
+          </tr>
+     
+      </tbody>
+  </table>
+  </div>
+
+    
+</div>
+
+<h5 class="text-center shadow my-2" style="color: rgb(221, 50, 50);" *ngIf="employees.length==0">No employees founded</h5>
+<div class="d-flex justify-content-center mt-3"  >
+    <pagination-controls *ngIf="employees.length!=0" (pageChange)="p = $event"></pagination-controls>
+  </div>
+  <!-- Popup form for Add -->
+
+<div id="popupForm" class="popupForm" >
+    
+    <form   [formGroup]="vaidationAddEmp" (ngSubmit)="addEmployee()">
+        <h1>Add Employee </h1>
+        <label >Name</label>
+        <input type="text" class="form-control"  formControlName="name"  name="name" required>
+        <div>
+          <small
+            *ngIf="(name?.errors?.['required'] && name?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          
+        </div>
+        <label >Address</label>
+        <textarea  name="address" class="form-control"  formControlName="address" id="address" required></textarea>
+
+       
+        <div>
+          <small
+            *ngIf="(address?.errors?.['required'] && address?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          
+        </div>
+        <label >Phone</label>
+
+        <input class="form-control" type="text"  formControlName="phone" name="phone" required>
+        <div>
+          <small
+            *ngIf="(phone?.errors?.['required'] && phone?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          <small
+          *ngIf="(phone?.errors?.['pattern'] && phone?.touched)"
+          class="text-danger m-3"
+        >
+          start with (010,011,012) and be 11 digit
+        </small>
+          
+        </div>
+        <label >Email</label>
+
+        <input type="text" class="form-control"  formControlName="email" name="email" required>
+        <div>
+          <small
+            *ngIf="(email?.errors?.['required'] && email?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          <small
+          *ngIf="(email?.errors?.['email'] && email?.touched)"
+          class="text-danger m-3"
+        >
+          invalid email format
+        </small>
+          
+        </div>
+     
+      
+      
+      <div class="row">
+        
+        <div class="col-lg-6 mb-3 mb-lg-0">
+          <button type="submit" class=" shadow btn btn-primary w-100" [disabled]="vaidationAddEmp.invalid" >Confirm</button>
+        </div>
+        <div class="col-lg-6">
+          <button
+            type="button"
+          (click)="closeForm()"
+            class="btn btn-danger w-100 shadow"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- Popup form for Update -->
+  <div id="popupFormUpdate" class="popupFormUpdate">
+    
+    <form [formGroup]="vaidationEditEmp" (ngSubmit)="updateEmployee()">
+        <h1>Update Employee </h1>
+        <label >Name</label>
+        <input type="text" class="form-control"   formControlName="name" name="name" required>
+        <div>
+          <small
+            *ngIf="(nameEdit?.errors?.['required'] && nameEdit?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          
+        </div>
+        <label >Address</label>
+<textarea formControlName="address"  name="address" required class="form-control"></textarea>
+        <div>
+          <small
+            *ngIf="(addressEdit?.errors?.['required'] && addressEdit?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          
+        </div>
+        <label >Phone</label>
+
+        <input type="text" class="form-control"  formControlName="phone"  name="phone" required>
+        <div>
+          <small
+            *ngIf="(phoneEdit?.errors?.['required'] && phoneEdit?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          <small
+          *ngIf="(phoneEdit?.errors?.['pattern'] && phoneEdit?.touched)"
+          class="text-danger m-3"
+        >
+         must start  (010,011,012) and be 11 digit
+        </small>
+          
+        </div>
+        <label >Email</label>
+
+        <input type="text" class="form-control"  formControlName="email"  name="email" required>
+        <div>
+          <small
+            *ngIf="(emailEdit?.errors?.['required'] && emailEdit?.touched)"
+            class="text-danger m-3"
+          >
+            this field is required
+          </small>
+          <small
+          *ngIf="(emailEdit?.errors?.['email'] && emailEdit?.touched)"
+          class="text-danger m-3"
+        >
+          invalid email format
+        </small>
+          
+        </div>
+     
+      
+      
+      <div class="row">
+        <div class="col-lg-6 mb-3 mb-lg-0">
+          <button type="submit" class="btn btn-primary w-100 shadow" [disabled]="vaidationEditEmp.invalid" >Confirm</button>
+        </div>
+        <div class="col-lg-6">
+          <button
+            type="button"
+          (click)="closeEditForm()"
+            class="btn btn-danger w-100 shadow"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+    <!-- Popup form for Delete -->
+    <div id="popupFormRemove" class="popupFormRemove">
+    
+        <form >
+           <h1>Delete Employee</h1>
+           
+           <h3  class="text-center">Do you confirm this delete ?</h3>
+
+           
+           <br>
+          <p class="alert alert-warning text-center" > this action can't be undo</p>
+
+         
+          
+          
+          <div class="row">
+            <div class="col-lg-6 mb-3 mb-lg-0">
+              <button type="submit" class="btn shadow w-100" style="background-color: rgb(210, 74, 74);" (click)="deleteSelectedEmployees()">Confirm</button>
+            </div>
+            <div class="col-lg-6">
+              <button
+                type="button"
+              (click)="closeRemoveForm()"
+                class="btn shadow  w-100"
+                style="background-color: rgb(75, 105, 132);"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+ 
+
